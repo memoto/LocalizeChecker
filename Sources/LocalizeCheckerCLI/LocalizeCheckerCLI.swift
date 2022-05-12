@@ -13,6 +13,9 @@ struct LocalizeCheckerCLI: AsyncParsableCommandProtocol {
     @Option(help: "Path to the lproj directory with localized strings")
     var localizedBundlePath: String
     
+    @Option(help: "Level of panic on invalid keys usage: (error | warning). `error` is default")
+    var strictlicity: ReportStrictlicity?
+    
     static var configuration = CommandConfiguration(commandName: "check-localize")
     
     func run() async throws {
@@ -23,7 +26,7 @@ struct LocalizeCheckerCLI: AsyncParsableCommandProtocol {
             localizeBundleFile: localizeBundleFile
         )
         let reportPrinter = ReportPrinter(
-            formatter: XcodeReportFormatter(strictlicity: .error)
+            formatter: XcodeReportFormatter(strictlicity: strictlicity ?? .error)
         )
         
         let start = ProcessInfo.processInfo.systemUptime
@@ -44,6 +47,8 @@ struct LocalizeCheckerCLI: AsyncParsableCommandProtocol {
     }
     
 }
+
+extension ReportStrictlicity: ExpressibleByArgument {}
 
 // MARK: - Source Files
 
