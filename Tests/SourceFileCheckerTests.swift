@@ -51,7 +51,7 @@ extension SourceFileCheckerTests {
             fileUrl: fileUrl,
             localizeBundle: localizeBundle
         )
-        sourceChecker.start()
+        try sourceChecker.start()
         
         // Then
         XCTAssertTrue(sourceChecker.errors.isEmpty, "Should produce no errors, but \(sourceChecker.errors.count) occured")
@@ -73,7 +73,7 @@ extension SourceFileCheckerTests {
             fileUrl: fileUrl,
             localizeBundle: localizeBundle
         )
-        sourceChecker.start()
+        try sourceChecker.start()
         
         // Then
         XCTAssertEqual(sourceChecker.errors, [estimatedError])

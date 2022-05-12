@@ -17,6 +17,7 @@ struct LocalizeCheckerCLI: AsyncParsableCommand {
     
     func run() async throws {
         let localizeBundleFile = URL(fileURLWithPath: localizedBundlePath)
+        
         let checker = SourceFileBatchChecker(
             sourceFiles: try files,
             localizeBundleFile: localizeBundleFile
@@ -43,7 +44,14 @@ private extension LocalizeCheckerCLI {
     
     private var files: [String] {
         get throws {
-            try sourcesDirectory.map(parseSourceDirectory) ?? self.sourceFiles
+            try sourcesDirectory.map(parseSourceDirectory)
+            ?? self.sourceFiles
+        }
+    }
+    
+    private var sourcesDirectoryUrl: URL? {
+        sourcesDirectory.map {
+            URL(fileURLWithPath: $0, isDirectory: true)
         }
     }
 

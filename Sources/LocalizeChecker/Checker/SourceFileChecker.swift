@@ -2,28 +2,37 @@ import Foundation
 import SwiftSyntax
 import SwiftSyntaxParser
 
-final class SourceFileChecker: Operation {
+final class SourceFileChecker {
     
     var errors: [ErrorMessage] = []
     
-    private let syntaxTree: SourceFileSyntax
-    private let parser: LocalizeParser
+    private let fileUrl: URL
     private let bundle: LocalizeBundle
     
     init(fileUrl: URL, localizeBundle: LocalizeBundle) throws {
-        syntaxTree = try SyntaxParser.parse(fileUrl)
+        self.fileUrl = fileUrl
         bundle = localizeBundle
-        let converter = SourceLocationConverter(file: fileUrl.path, tree: syntaxTree)
-        parser = LocalizeParser(converter: converter)
     }
     
-    override func main() {
-        guard !isCancelled else { return }
+    func start() throws {
+        guard try fastCheck() else { return }
+        
+        let syntaxTree = try SyntaxParser.parse(fileUrl)
+        let converter = SourceLocationConverter(file: fileUrl.path, tree: syntaxTree)
+        let parser = LocalizeParser(converter: converter)
         
         parser.walk(syntaxTree)
         errors = parser.foundKeys
             .filter(notExistsInBundle)
             .compactMap(\.errorMessage)
+    }
+    
+}
+
+private extension SourceFileChecker {
+    
+    func fastCheck() throws -> Bool {
+        try String(contentsOf: fileUrl).contains(".localized")
     }
     
 }
