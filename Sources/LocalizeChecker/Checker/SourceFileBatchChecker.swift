@@ -84,7 +84,7 @@ public final class SourceFileBatchChecker {
             try SourceFileChecker(fileUrl: $0, localizeBundle: localizeBundle)
         }
         for sourceChecker in sourceCheckers {
-            sourceChecker.main()
+            try sourceChecker.start()
         }
         
         return sourceCheckers.flatMap(\.errors)

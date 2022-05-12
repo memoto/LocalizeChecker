@@ -1,7 +1,7 @@
 import Foundation
 import SwiftSyntax
 
-public struct ErrorMessage: Equatable {
+public struct ErrorMessage: Equatable, Codable {
     let key: String
     let file: String
     let line: Int
