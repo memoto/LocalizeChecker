@@ -4,7 +4,15 @@ public final class SourceFileBatchChecker {
     
     public typealias ReportStream = AsyncThrowingStream<ErrorMessage, Error>
     
+    @available(macOS 12, *)
     public var reports: ReportStream { run() }
+    
+    @available(macOS, deprecated: 12, obsoleted: 13, message: "Use much faster reports stream")
+    public func getReports() throws -> [ErrorMessage] {
+        try syncRun()
+    }
+    
+    @available(macOS 12, *)
     var processedFiles: AsyncMapSequence<ReportStream, String> {
         reports.map(\.baseFilename)
     }
@@ -36,6 +44,7 @@ public final class SourceFileBatchChecker {
             : sourceFiles.count
     }
     
+    @available(macOS 12, *)
     @discardableResult
     func run() -> ReportStream {
         let localizeBundle = LocalizeBundle(fileUrl: localizeBundleFile)

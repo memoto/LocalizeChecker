@@ -3,7 +3,7 @@ import ArgumentParser
 import LocalizeChecker
 
 @main
-struct LocalizeCheckerCLI: AsyncParsableCommand {
+struct LocalizeCheckerCLI: AsyncParsableCommandProtocol {
     @Argument(help: "Files which to scan")
     var sourceFiles: [String] = []
 
@@ -28,14 +28,21 @@ struct LocalizeCheckerCLI: AsyncParsableCommand {
         
         let start = ProcessInfo.processInfo.systemUptime
         
-        for try await report in checker.reports {
-            await reportPrinter.print(report)
+        if #available(macOS 12, *) {
+            for try await report in checker.reports {
+                await reportPrinter.print(report)
+            }
+        } else {
+            for report in try checker.getReports() {
+                reportPrinter.printOnMainQueue(report)
+            }
         }
         
         let end = ProcessInfo.processInfo.systemUptime
         
         print("✅ LocalizeChecker took \(end - start) seconds")
     }
+    
 }
 
 // MARK: - Source Files
