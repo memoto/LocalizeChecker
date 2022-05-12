@@ -12,9 +12,9 @@ public struct XcodeReportFormatter: ReportFormatter {
         
         // {full_path_to_file}{:line}{:character}: {error,warning}: {content}
         return [
-            "\(message.file)",
+            "\(message.file):",
             "\(message.line):",
-            "\(message.column):",
+            "\(message.column): ",
             "\(strictlicity.rawValue): ",
             "\(message.description)"
         ].joined()
