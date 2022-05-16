@@ -30,4 +30,17 @@ final class LocalizeBundleTests: XCTestCase {
         XCTAssertNotNil(bundle[key], "No [\(key)] was found!")
     }
     
+    func testParsedBundleNotContaintUnknownKey() throws {
+        // Given
+        let key = "louis_ck_falafel"
+        let directoryPath = Bundle.module.resourceURL?.appendingPathComponent("Fixtures/enlproj").path
+        
+        // When
+        XCTAssertNotNil(directoryPath)
+        let bundle = try LocalizeBundle(directoryPath: directoryPath!)
+        
+        // Then
+        XCTAssertNil(bundle[key], "The [\(key)] was found but shouldn't be!")
+    }
+    
 }

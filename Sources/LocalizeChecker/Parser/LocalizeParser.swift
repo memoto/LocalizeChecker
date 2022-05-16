@@ -15,7 +15,8 @@ final class LocalizeParser: SyntaxVisitor {
     override func visit(_ node: StringLiteralExprSyntax) -> SyntaxVisitorContinueKind {
         guard
             node.nextToken?.tokenKind == TokenKind.period,
-            node.nextToken?.nextToken?.tokenKind == TokenKind.identifier("localized")
+            node.nextToken?.nextToken?.tokenKind == TokenKind.identifier("localized"),
+            !node.hasInterpolation
         else {
             return .skipChildren
         }
@@ -28,6 +29,16 @@ final class LocalizeParser: SyntaxVisitor {
             )
         }
         return .skipChildren
+    }
+    
+}
+
+private extension StringLiteralExprSyntax {
+    
+    var hasInterpolation: Bool {
+        segments.contains { syntax in
+            syntax.is(ExpressionSegmentSyntax.self)
+        }
     }
     
 }

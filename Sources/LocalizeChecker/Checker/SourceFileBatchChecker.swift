@@ -5,7 +5,11 @@ public final class SourceFileBatchChecker {
     public typealias ReportStream = AsyncThrowingStream<ErrorMessage, Error>
     
     @available(macOS 12, *)
-    public var reports: ReportStream { run() }
+    public var reports: ReportStream {
+        get throws {
+            try run()
+        }
+    }
     
     @available(macOS, deprecated: 12, obsoleted: 13, message: "Use much faster reports stream")
     public func getReports() throws -> [ErrorMessage] {
@@ -14,18 +18,20 @@ public final class SourceFileBatchChecker {
     
     @available(macOS 12, *)
     var processedFiles: AsyncMapSequence<ReportStream, String> {
-        reports.map(\.baseFilename)
+        get throws {
+            try reports.map(\.baseFilename)
+        }
     }
 
     private var sourceFiles: [String]
-    private var localizeBundleFile: URL
+    private var localizeBundleUrl: URL
     
     public init(
         sourceFiles: [String],
         localizeBundleFile: URL
     ) {
         self.sourceFiles = sourceFiles
-        self.localizeBundleFile = localizeBundleFile
+        self.localizeBundleUrl = localizeBundleFile
     }
     
     private var chunks: [ArraySlice<String>] {
@@ -46,9 +52,8 @@ public final class SourceFileBatchChecker {
     
     @available(macOS 12, *)
     @discardableResult
-    func run() -> ReportStream {
-        let localizeBundle = LocalizeBundle(fileUrl: localizeBundleFile)
-        
+    func run() throws -> ReportStream {
+        let localizeBundle = try LocalizeBundle(directoryPath: localizeBundleUrl.path)
         return ReportStream { continuation in
             Task {
                 await withThrowingTaskGroup(of: [ErrorMessage].self) { group in
@@ -78,7 +83,7 @@ public final class SourceFileBatchChecker {
     
     @discardableResult
     func syncRun() throws -> [ErrorMessage] {
-        let localizeBundle = LocalizeBundle(fileUrl: localizeBundleFile)
+        let localizeBundle = LocalizeBundle(fileUrl: localizeBundleUrl)
         let reports = try self.processBatch(
             ofSourceFiles: sourceFiles,
             in: localizeBundle

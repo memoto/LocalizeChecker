@@ -3,7 +3,7 @@ import ArgumentParser
 import LocalizeChecker
 
 @main
-struct LocalizeCheckerCLI: AsyncParsableCommandProtocol {
+struct LocalizeCheckerCLI: AsyncParsableCommandProtocol, SourceFilesTraversalTrait {
     @Argument(help: "Files which to scan")
     var sourceFiles: [String] = []
 
@@ -16,7 +16,11 @@ struct LocalizeCheckerCLI: AsyncParsableCommandProtocol {
     @Option(help: "Level of panic on invalid keys usage: (error | warning). `error` is default")
     var strictlicity: ReportStrictlicity?
     
-    static var configuration = CommandConfiguration(commandName: "check-localize")
+    static var configuration = CommandConfiguration(
+        commandName: "check-localize",
+        abstract: "Scans for misused localization keys in your project sources",
+        version: "0.1.2"
+    )
     
     func run() async throws {
         let localizeBundleFile = URL(fileURLWithPath: localizedBundlePath)
@@ -32,7 +36,7 @@ struct LocalizeCheckerCLI: AsyncParsableCommandProtocol {
         let start = ProcessInfo.processInfo.systemUptime
         
         if #available(macOS 12, *) {
-            for try await report in checker.reports {
+            for try await report in try checker.reports {
                 await reportPrinter.print(report)
             }
         } else {
@@ -49,52 +53,3 @@ struct LocalizeCheckerCLI: AsyncParsableCommandProtocol {
 }
 
 extension ReportStrictlicity: ExpressibleByArgument {}
-
-// MARK: - Source Files
-
-private extension LocalizeCheckerCLI {
-    
-    private var files: [String] {
-        get throws {
-            try sourcesDirectory.map(parseSourceDirectory)
-            ?? self.sourceFiles
-        }
-    }
-    
-    private var sourcesDirectoryUrl: URL? {
-        sourcesDirectory.map {
-            URL(fileURLWithPath: $0, isDirectory: true)
-        }
-    }
-
-    private func parseSourceDirectory(_ directoryPath: String) throws -> [String] {
-        let fileManager = FileManager()
-        guard let sourcesEnumerator = fileManager.enumerator(
-            at: URL(fileURLWithPath: directoryPath, isDirectory: true),
-            includingPropertiesForKeys: [.isRegularFileKey],
-            options: [.skipsHiddenFiles, .skipsPackageDescendants]
-        ) else {
-            throw Error.sourcesFileEnumerationFailed
-        }
-        
-        return try sourcesEnumerator
-            .compactMap { $0 as? URL }
-            .filter { $0.pathExtension == "swift" }
-            .filter {
-                let attributes = try $0.resourceValues(
-                    forKeys: [.isRegularFileKey]
-                )
-                return attributes.isRegularFile ?? false
-            }
-            .map(\.path)
-    }
-    
-}
-
-extension LocalizeCheckerCLI {
-
-    enum Error: Swift.Error {
-        case sourcesFileEnumerationFailed
-    }
-    
-}

@@ -15,7 +15,7 @@ final class ReportFormatter: XCTestCase {
         // Then
         XCTAssertEqual(
             formattedMessage,
-            "ProfileView.swift:23:14: error: 💂‍♀️ Localization [tap_me] referenced in ProfileView.swift is missing in the original bundle"
+            "ProfileView.swift:23:14: error: 💂‍♀️ Localization [tap_me] is missing in the original bundle"
         )
     }
     
@@ -31,7 +31,7 @@ final class ReportFormatter: XCTestCase {
         // Then
         XCTAssertEqual(
             formattedMessage,
-            "ProfileView.swift:23:14: warning: 💂‍♀️ Localization [tap_me] referenced in ProfileView.swift is missing in the original bundle"
+            "ProfileView.swift:23:14: warning: 💂‍♀️ Localization [tap_me] is missing in the original bundle"
         )
     }
     
