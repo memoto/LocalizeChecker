@@ -13,6 +13,8 @@ final class LocalizeBundle {
     
     init(fileUrl: URL) {
         dictionary = Self.parseStrings(fileUrl: fileUrl)
+        
+        print("LocalizeBundle(fileUrl:): dict.count = \(dictionary.keys.count)")
     }
     
     init(directoryPath: String) throws {
@@ -36,6 +38,8 @@ final class LocalizeBundle {
                 break
             }
         }
+        
+        print("LocalizeBundle(directoryPath:): dict.count = \(dictionary.keys.count)")
     }
     
     subscript(key: String) -> Any? {

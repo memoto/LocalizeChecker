@@ -16,7 +16,7 @@ extension ErrorMessage {
     
     var description: String {
         """
-        💂‍♀️ Localization [\(key)] referenced in \(file) is missing in the original bundle
+        💂‍♀️ Localization [\(key)] is missing in the original bundle
         """
     }
     

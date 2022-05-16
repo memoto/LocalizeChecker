@@ -43,7 +43,7 @@ extension SourceFileCheckerTests {
     
     func testSourceFileCheckerWhenAllKnownKeysProducesNoIssues() throws {
         // Given
-        setup(input: inputSource(withLocalizeKey: "category_name_cash"))
+        setup(input: inputSource(withLocalizeKey: "card_issue_address_details_n_a_option_short"))
         let localizeBundle = LocalizeBundle(fileUrl: defaultBundleUrl)
         
         // When
@@ -77,6 +77,22 @@ extension SourceFileCheckerTests {
         
         // Then
         XCTAssertEqual(sourceChecker.errors, [estimatedError])
+    }
+    
+    func testSourceFileCheckerOnKeyWithInterpolationProducesNoIssues() throws {
+        // Given
+        setup(input: inputSource(withLocalizeKey: "do_you_know_me\\(var)"))
+        let localizeBundle = LocalizeBundle(fileUrl: defaultBundleUrl)
+        
+        // When
+        let sourceChecker = try SourceFileChecker(
+            fileUrl: fileUrl,
+            localizeBundle: localizeBundle
+        )
+        try sourceChecker.start()
+        
+        // Then
+        XCTAssertTrue(sourceChecker.errors.isEmpty)
     }
     
 }
