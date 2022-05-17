@@ -52,8 +52,7 @@ Cove coverage:
     - .build/debug/${FRAMEWORK_NAME}PackageTests.xctest/Contents/MacOS/${{FRAMEWORK_NAME}}PackageTests \
     - -intstr-profile .build/debug/codecov/default.profdata > info.lcov
     - lcov_cobertura info.lcov
+  needs: ["Test"]
   artifacts:
     reports:
-      coverage_report:
-        coverage_format: cobertura
-        path: coverage.xml
+      cobertura: coverage.xml
