@@ -1,6 +1,10 @@
 stages:
   - analyze
   - test
+  - codecov
+
+variables:
+  FRAMEWORK_NAME: "LocalizeChecker"
 
 # A job for analyzing code via Swiftlint
 Lint:
@@ -26,4 +30,30 @@ Test:
     - if: '$TEST'
       when: always
   script:
-    - swift test
+    - swift test --enable-code-coverage
+  artifacts:
+   paths:
+    - .build/debug/${FRAMEWORK_NAME}PackageTests.xctest/Contents/MacOS/${{FRAMEWORK_NAME}}PackageTests
+    - .build/debug/codecov/default.profdata
+
+Cove coverage:
+  stage: codecov
+  rules:
+    - if: $CI_MERGE_REQUEST_SOURCE_BRANCH =~ /^test.*$/
+      when: never
+    - if: $CI_PIPELINE_SOURCE == 'merge_request_event'
+      when: always
+    - if: '$CODECOV'
+      when: always
+  before_script:
+    - pip install lcov_cobertura
+  script:
+    - xcrun llvm-cov export -format="lcov" \
+    - .build/debug/${FRAMEWORK_NAME}PackageTests.xctest/Contents/MacOS/${{FRAMEWORK_NAME}}PackageTests \
+    - -intstr-profile .build/debug/codecov/default.profdata > info.lcov
+    - lcov_cobertura info.lcov
+  artifacts:
+    reports:
+      coverage_report:
+        coverage_format: cobertura
+        path: coverage.xml
