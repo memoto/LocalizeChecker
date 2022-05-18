@@ -9,8 +9,6 @@ variables:
 # A job for analyzing code via Swiftlint
 Lint:
   stage: analyze
-  tags:
-    - utils
   rules:
     - if: $CI_PIPELINE_SOURCE == 'merge_request_event'
       when: always
@@ -27,32 +25,37 @@ Test:
       when: never
     - if: $CI_PIPELINE_SOURCE == 'merge_request_event'
       when: always
+    - if: "$CI_PIPELINE_SOURCE == 'push' && $CI_COMMIT_BRANCH =~ /^master|main*$/"
+      changes:
+        - Sources/**/*
+        - Tests/**/*
+      when: always
     - if: '$TEST'
       when: always
   script:
     - swift test --enable-code-coverage
   artifacts:
    paths:
-    - .build/debug/${FRAMEWORK_NAME}PackageTests.xctest/Contents/MacOS/${{FRAMEWORK_NAME}}PackageTests
-    - .build/debug/codecov/default.profdata
+    - .build/debug/${FRAMEWORK_NAME}PackageTests.xctest/
+    - .build/debug/codecov/
 
 Cove coverage:
   stage: codecov
   rules:
-    - if: $CI_MERGE_REQUEST_SOURCE_BRANCH =~ /^test.*$/
-      when: never
-    - if: $CI_PIPELINE_SOURCE == 'merge_request_event'
+    - if: "$CI_PIPELINE_SOURCE == 'push' && $CI_COMMIT_BRANCH =~ /^master|main*$/"
+      changes:
+        - Sources/**/*
+        - Tests/**/*
       when: always
     - if: '$CODECOV'
       when: always
   before_script:
     - pip install lcov_cobertura
+    - brew install xmlstarlet
   script:
-    - xcrun llvm-cov export -format="lcov" \
-    - .build/debug/${FRAMEWORK_NAME}PackageTests.xctest/Contents/MacOS/${{FRAMEWORK_NAME}}PackageTests \
-    - -intstr-profile .build/debug/codecov/default.profdata > info.lcov
-    - lcov_cobertura info.lcov
+    - sh .ci/coverage.sh
   needs: ["Test"]
+  coverage: '/^gitlab-coverage .+%$/'
   artifacts:
     reports:
       cobertura: coverage.xml
