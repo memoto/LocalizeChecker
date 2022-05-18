@@ -10,5 +10,5 @@ struct Localisation {
 func setupButton() {
     let age = 33
     let height = 182
-    let result = "\("report_health".localized(age, height)) and also \("thanks".localized)"
+    let result = "\("report_health".localized(with: age, height)) and also \("thanks".localized)"
 }
