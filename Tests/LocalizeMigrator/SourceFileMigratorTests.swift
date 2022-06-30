@@ -70,4 +70,40 @@ final class SourceFileMigratorTests: XCTestCase {
         XCTAssertNil(migratedContent)
     }
     
+    func testLocalizationSelfDidNotTouched() throws {
+        // Given
+        let fileUrl = Bundle.module
+            .url(forResource: "LocalisationSelf", withExtension: "swift", subdirectory: "Fixtures")!
+        let outputFileUrl = URL(fileURLWithPath: ".fixtures")
+            .appendingPathComponent("MigratedLocalisationSelf.swift")
+        let sourceMigrator = SourceFileMigrator(fileUrl: fileUrl, output: outputFileUrl)
+        
+        // When
+        try sourceMigrator.start()
+        
+        // Then
+        let nonMigratedContent = try? String(contentsOf: fileUrl)
+        let migratedContent = try? String(contentsOf: outputFileUrl)
+        XCTAssertEqual(migratedContent, nonMigratedContent)
+    }
+    
+    func testDecoratorLocalizationsMigrated() throws {
+        // Given
+        let fileUrl = Bundle.module
+            .url(forResource: "DecoratorLocalizations", withExtension: "swift", subdirectory: "Fixtures")!
+        let estimatedOutput = try Bundle.module
+            .url(forResource: "DecoratorLocalizations.migrated", withExtension: "swift", subdirectory: "Fixtures")
+            .map(String.init(contentsOf:))!
+        let outputFileUrl = URL(fileURLWithPath: ".fixtures")
+            .appendingPathComponent("DecoratorLocalizations.migrated.swift")
+        let sourceMigrator = SourceFileMigrator(fileUrl: fileUrl, output: outputFileUrl)
+        
+        // When
+        try sourceMigrator.start()
+        
+        // Then
+        let migratedContent = try? String(contentsOf: outputFileUrl)
+        XCTAssertEqual(estimatedOutput, migratedContent)
+    }
+    
 }
