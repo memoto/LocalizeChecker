@@ -1,0 +1,5 @@
+"banking_tariff_upgrade_prime_confirm_name" = "Vivid Prime";
+"banking_tariff_upgrade_prime_confirm_title" = "Confirm payment";
+"banking_tariff_upgrade_success_message" = "Upgraded!";
+"banking_tariff_upgrade_terms" = "<![CDATA[By pushing Confirm you are agreeing with the <a href='https://www.solarisbank.com/content/partner/prices_and_services'>List of Prices and Services</a>, the <a href='https://website-static.vivid.money/static/legal-docs/en-fr/pre-contractual-info.pdf'>Pre-contractual information for distance contracts & right of revocation</a>]]>";
+"banking_tariff_upgrade_to_prime_button" = "Upgrade to Prime";

@@ -15,12 +15,15 @@ public final class SourceFileMigrator {
     public func start() throws {
         guard try fastCheck() else { return }
         
-        let syntaxTree = try SyntaxParser.parse(inputFileUrl)
-        let rewriter = LocalizationCallRewriter()
-        let rewritten = rewriter.visit(syntaxTree)
-        let rewrittenText = rewritten.description
-        try rewrittenText.write(to: outputFileUrl, atomically: true, encoding: .utf8)
+        let contents = try String(contentsOf: inputFileUrl)
+        let negations = #"(?!\bself\b)(?!\bType\b)"#
+        let rewrittenContent = contents.replacingOccurrences(
+            of: "(?<module>Localisation|localisation).\(negations)(?<key>\\w+)",
+            with: #""$2".localized"#,
+            options: .regularExpression
+        )
         
+        try rewrittenContent.write(to: outputFileUrl, atomically: true, encoding: .utf8)
     }
     
 }
@@ -30,5 +33,5 @@ private extension SourceFileMigrator {
     func fastCheck() throws -> Bool {
         try String(contentsOf: inputFileUrl).contains("Localisation.")
     }
-
+    
 }
