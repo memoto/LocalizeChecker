@@ -30,6 +30,34 @@ final class LocalizeBundleTests: XCTestCase {
         XCTAssertNotNil(bundle[key], "No [\(key)] was found!")
     }
     
+    func testParsedBundleContaintsKeyWithCDATA() throws {
+        // Given
+        let key = "common_donates_screen_description"
+        let directoryPath = Bundle.module.resourceURL?.appendingPathComponent("Fixtures/short_cdata_lproj").path
+        
+        // When
+        XCTAssertNotNil(directoryPath)
+        let bundle = try LocalizeBundle(directoryPath: directoryPath!)
+        
+        // Then
+        XCTAssertNotNil(bundle[key], "The [\(key)] was found but shouldn't be!")
+    }
+    
+    func testParsedBundleContaintsKeyWithComplexCDATA() throws {
+        // Given
+        let key = "banking_tariff_upgrade_terms"
+        let directoryPath = Bundle.module.resourceURL?.appendingPathComponent("Fixtures/short_cdata_complex_lproj").path
+        
+        // When
+        XCTAssertNotNil(directoryPath)
+        let bundle = try LocalizeBundle(directoryPath: directoryPath!)
+        
+        // Then
+        XCTAssertNotNil(bundle[key], "The [\(key)] was found but shouldn't be!")
+    }
+    
+//    banking_tariff_upgrade_terms
+    
     func testParsedBundleNotContaintUnknownKey() throws {
         // Given
         let key = "louis_ck_falafel"

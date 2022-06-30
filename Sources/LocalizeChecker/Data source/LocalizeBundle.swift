@@ -62,7 +62,7 @@ private extension LocalizeBundle {
             .split(separator: ";")
             .reduce(into: [:]) { dict, entry in
                 let keyValue = entry
-                    .split(separator: "=")
+                    .split(separator: "=", maxSplits: 1)
                     .map(String.init)
                     .map(trimSpacesAndNewlines)
                     .map(removeQuotes)

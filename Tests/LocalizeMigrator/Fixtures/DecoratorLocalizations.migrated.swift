@@ -1,0 +1,5 @@
+let emptyResultLabel = UILabel(text: "common_no_results".localized)
+        .decorated(with: .headline5)
+        .decorated(with: .alignment(.center))
+        .decorated(with: .text("common_no_results".localized))
+        .decorated(with: .hidden())
