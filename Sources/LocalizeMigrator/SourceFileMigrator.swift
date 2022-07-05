@@ -18,7 +18,7 @@ public final class SourceFileMigrator {
         let contents = try String(contentsOf: inputFileUrl)
         let negations = #"(?!\bself\b)(?!\bType\b)"#
         let rewrittenContent = contents.replacingOccurrences(
-            of: "(?<module>Localisation|localisation)\.\(negations)(?<key>\\w+)",
+            of: "(?<module>Localisation|localisation)\\.\(negations)(?<key>\\w+)",
             with: #""$2".localized"#,
             options: .regularExpression
         )
