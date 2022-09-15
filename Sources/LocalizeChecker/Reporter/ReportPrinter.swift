@@ -1,5 +1,6 @@
 import Foundation
 
+/// Prints checker reports in the given format
 public final class ReportPrinter {
     
     private let formatter: ReportFormatter

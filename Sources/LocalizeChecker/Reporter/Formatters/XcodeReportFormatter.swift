@@ -1,5 +1,6 @@
 import Foundation
 
+/// Formats localization check error to the suitable format for Xcode
 public struct XcodeReportFormatter: ReportFormatter {
     
     private let strictlicity: ReportStrictlicity

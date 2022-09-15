@@ -8,10 +8,15 @@ final class SourceFileChecker {
     
     private let fileUrl: URL
     private let bundle: LocalizeBundle
+    private let literalMarker: String
     
-    init(fileUrl: URL, localizeBundle: LocalizeBundle) throws {
+    init(fileUrl: URL,
+         localizeBundle: LocalizeBundle,
+         literalMarker: String = "localized"
+    ) throws {
         self.fileUrl = fileUrl
         bundle = localizeBundle
+        self.literalMarker = literalMarker
     }
     
     func start() throws {
@@ -32,7 +37,7 @@ final class SourceFileChecker {
 private extension SourceFileChecker {
     
     func fastCheck() throws -> Bool {
-        try String(contentsOf: fileUrl).contains(".localized")
+        try String(contentsOf: fileUrl).contains(".\(literalMarker)")
     }
     
 }

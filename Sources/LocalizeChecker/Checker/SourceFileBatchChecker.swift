@@ -1,10 +1,12 @@
 import Foundation
 
+/// Performs multiple checks at once considering certain optimizations depending on the amount of them
 public final class SourceFileBatchChecker {
     
     public typealias ReportStream = AsyncThrowingStream<ErrorMessage, Error>
     
     @available(macOS 12, *)
+    /// Async stream of obtained check reports
     public var reports: ReportStream {
         get throws {
             try run()
@@ -26,6 +28,10 @@ public final class SourceFileBatchChecker {
     private var sourceFiles: [String]
     private var localizeBundleUrl: URL
     
+    /// Creates batch source file checker
+    /// - Parameters:
+    ///   - sourceFiles: List of source files to check for localization mistakes
+    ///   - localizeBundleFile: Directory url to the localization files
     public init(
         sourceFiles: [String],
         localizeBundleFile: URL

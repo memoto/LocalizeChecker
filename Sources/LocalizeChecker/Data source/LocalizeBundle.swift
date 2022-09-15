@@ -5,19 +5,25 @@ enum Localizable: String {
     case dict = "Localizable.stringsdict"
 }
 
-final class LocalizeBundle {
+/// Represents a merged bundle structure for **Localizable.strings** and **Localizable.stringsdict**
+/// Each key can be obtained by subscript
+public final class LocalizeBundle {
     
     typealias LocalizeHash = [String : Any]
     
     private let dictionary: LocalizeHash
     
-    init(fileUrl: URL) {
+    /// Create bundle from file
+    /// - Parameter fileUrl: URL of the strings file
+    public init(fileUrl: URL) {
         dictionary = Self.parseStrings(fileUrl: fileUrl)
         
         print("LocalizeBundle(fileUrl:): dict.count = \(dictionary.keys.count)")
     }
     
-    init(directoryPath: String) throws {
+    /// Create bundle from strings files inside directory
+    /// - Parameter directoryPath: path to the directory containing both strings and stringsdict files
+    public init(directoryPath: String) throws {
         let directoryUrl = URL(fileURLWithPath: directoryPath, isDirectory: true)
         let fileManager = FileManager()
         let items = try fileManager.contentsOfDirectory(atPath: directoryPath)
@@ -42,7 +48,7 @@ final class LocalizeBundle {
         print("LocalizeBundle(directoryPath:): dict.count = \(dictionary.keys.count)")
     }
     
-    subscript(key: String) -> Any? {
+    public subscript(key: String) -> Any? {
         dictionary[key]
     }
     
@@ -88,7 +94,7 @@ private extension LocalizeBundle {
 
 extension LocalizeBundle: ExpressibleByStringLiteral {
     
-    convenience init(stringLiteral string: String) {
+    convenience public init(stringLiteral string: String) {
         self.init(fileUrl: URL(fileURLWithPath: string))
     }
     

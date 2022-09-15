@@ -3,13 +3,14 @@ import SwiftSyntax
 
 final class LocalizeParser: SyntaxVisitor {
 
-    var isCorrect: Bool = false
     var foundKeys: [LocalizeEntry] = []
     
-    let converter: SourceLocationConverter
+    private let converter: SourceLocationConverter
+    private let literalMarker: String
     
-    init(converter: SourceLocationConverter) {
+    init(converter: SourceLocationConverter, literalMarker: String = "localized") {
         self.converter = converter
+        self.literalMarker = literalMarker
     }
     
     override func visit(_ node: StringLiteralExprSyntax) -> SyntaxVisitorContinueKind {
