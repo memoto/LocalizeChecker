@@ -8,7 +8,7 @@ Additionally you can attach the appropriate reporting mechanism to see erros or 
 ### Swift Package Manager
 
 ```swift
-.package(url: "https://github.com/memoto/LocalizeChecker.git, from: "0.1.6")
+.package(url: "https://github.com/memoto/LocalizeChecker.git, from: "0.1.8")
 ```
 
 ## Usage
@@ -17,8 +17,7 @@ Additionally you can attach the appropriate reporting mechanism to see erros or 
 
 Suppose you're located in the package root directory
 ```bash
-swift run -c release \
-    LocalizeCheckerCLI check-localize \
+swift run -c release check-localize \
     --sources-directory $SOURCES_PATH \
     --localized-bundle-path "$LOCALIZATION_RESOURCES_PATH/de.lproj" \
     --strictlicity warning

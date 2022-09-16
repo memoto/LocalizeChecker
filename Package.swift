@@ -26,9 +26,6 @@ let package = Package(
             dependencies: [
                 .product(name: "ArgumentParser", package: "swift-argument-parser"),
                 "LocalizeChecker",
-            ],
-            linkerSettings: [
-                .unsafeFlags(["-rpath", "@executable_path/Frameworks"])
             ]
         ),
         .target(
