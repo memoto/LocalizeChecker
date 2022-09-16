@@ -16,7 +16,7 @@ final class LocalizeParser: SyntaxVisitor {
     override func visit(_ node: StringLiteralExprSyntax) -> SyntaxVisitorContinueKind {
         guard
             node.nextToken?.tokenKind == TokenKind.period,
-            node.nextToken?.nextToken?.tokenKind == TokenKind.identifier("localized"),
+            node.nextToken?.nextToken?.tokenKind == TokenKind.identifier(literalMarker),
             !node.hasInterpolation
         else {
             return .skipChildren
