@@ -11,6 +11,8 @@ final class LocalizeParser: SyntaxVisitor {
     init(converter: SourceLocationConverter, literalMarker: String = "localized") {
         self.converter = converter
         self.literalMarker = literalMarker
+        
+        super.init(viewMode: .fixedUp)
     }
     
     override func visit(_ node: StringLiteralExprSyntax) -> SyntaxVisitorContinueKind {
