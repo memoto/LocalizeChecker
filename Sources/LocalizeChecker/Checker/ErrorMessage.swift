@@ -33,14 +33,10 @@ extension ErrorMessage {
 extension ErrorMessage {
     
     init(entry: LocalizeEntry) {
-        let file = entry.sourceLocation.file
-        let line = entry.sourceLocation.line
-        let column = entry.sourceLocation.column
-        
-        key = entry.key
-        self.file = file
-        self.line = line
-        self.column = column
+        self.key = entry.key
+        self.file = entry.sourceLocation.file
+        self.line = entry.sourceLocation.line
+        self.column = entry.sourceLocation.column
     }
     
 }
