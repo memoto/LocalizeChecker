@@ -14,7 +14,6 @@ final class LocalizeParserTests: XCTestCase {
        button.configure(title: "welcome_title")
     }
     """
-    let inputSource2 = 1
     
     let fileName = "localize_check_test.swift"
     lazy var fileUrl = URL(fileURLWithPath: fileName)
