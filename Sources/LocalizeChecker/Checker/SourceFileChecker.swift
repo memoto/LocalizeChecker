@@ -1,6 +1,6 @@
 import Foundation
 import SwiftSyntax
-import SwiftSyntaxParser
+import SwiftParser
 
 final class SourceFileChecker {
     
@@ -22,8 +22,8 @@ final class SourceFileChecker {
     func start() throws {
         guard try fastCheck() else { return }
         
-        let syntaxTree = try SyntaxParser.parse(fileUrl)
-        let converter = SourceLocationConverter(file: fileUrl.path, tree: syntaxTree)
+        let syntaxTree = Parser.parse(source: try String(contentsOf: fileUrl))
+        let converter = SourceLocationConverter(fileName: fileUrl.path, tree: syntaxTree)
         let parser = LocalizeParser(converter: converter)
         
         parser.walk(syntaxTree)
