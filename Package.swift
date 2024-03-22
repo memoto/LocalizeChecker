@@ -1,11 +1,11 @@
-// swift-tools-version: 5.6
+// swift-tools-version: 5.9
 
 import PackageDescription
 import Foundation
 
 let package = Package(
     name: "LocalizeChecker",
-    platforms: [.macOS(.v12)],
+    platforms: [.macOS(.v14)],
     products: [
         .executable(name: "check-localize", targets: ["LocalizeCheckerCLI"]),
         .library(name: "LocalizeChecker", targets: ["LocalizeChecker"])
@@ -25,6 +25,8 @@ let package = Package(
             name: "LocalizeCheckerCLI",
             dependencies: [
                 .product(name: "ArgumentParser", package: "swift-argument-parser"),
+                .product(name: "SwiftSyntax", package: "swift-syntax"),
+                .product(name: "SwiftParser", package: "swift-syntax"),
                 "LocalizeChecker",
             ]
         ),
@@ -32,7 +34,7 @@ let package = Package(
             name: "LocalizeChecker",
             dependencies: [
                 .product(name: "SwiftSyntax", package: "swift-syntax"),
-                .product(name: "SwiftSyntaxParser", package: "swift-syntax")
+                .product(name: "SwiftParser", package: "swift-syntax")
             ]
         ),
         .testTarget(

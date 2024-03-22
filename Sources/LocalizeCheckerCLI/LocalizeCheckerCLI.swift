@@ -35,14 +35,8 @@ struct LocalizeCheckerCLI: AsyncParsableCommandProtocol, SourceFilesTraversalTra
         
         let start = ProcessInfo.processInfo.systemUptime
         
-        if #available(macOS 12, *) {
-            for try await report in try checker.reports {
-                await reportPrinter.print(report)
-            }
-        } else {
-            for report in try checker.getReports() {
-                reportPrinter.printOnMainQueue(report)
-            }
+        for try await report in try checker.reports {
+            await reportPrinter.print(report)
         }
         
         let end = ProcessInfo.processInfo.systemUptime

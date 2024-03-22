@@ -1,7 +1,7 @@
 import Foundation
 import SwiftSyntax
 
-/// Contains all neccessary meta data to locate and describe localization check error
+/// Contains all necessary meta data to locate and describe localization check error
 public struct ErrorMessage: Equatable, Codable {
     /// Key of the localized string in the dictionary
     let key: String
@@ -32,14 +32,10 @@ extension ErrorMessage {
 
 extension ErrorMessage {
     
-    init?(entry: LocalizeEntry) {
-        guard
-            let file = entry.sourceLocation.file,
-            let line = entry.sourceLocation.line,
-            let column = entry.sourceLocation.column
-        else {
-            return nil
-        }
+    init(entry: LocalizeEntry) {
+        let file = entry.sourceLocation.file
+        let line = entry.sourceLocation.line
+        let column = entry.sourceLocation.column
         
         key = entry.key
         self.file = file

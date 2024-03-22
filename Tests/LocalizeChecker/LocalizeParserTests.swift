@@ -1,6 +1,6 @@
 import XCTest
 import SwiftSyntax
-import SwiftSyntaxParser
+import SwiftParser
 @testable import LocalizeChecker
 
 final class LocalizeParserTests: XCTestCase {
@@ -14,6 +14,7 @@ final class LocalizeParserTests: XCTestCase {
        button.configure(title: "welcome_title")
     }
     """
+    let inputSource2 = 1
     
     let fileName = "localize_check_test.swift"
     lazy var fileUrl = URL(fileURLWithPath: fileName)
@@ -36,8 +37,8 @@ extension LocalizeParserTests {
     func testFoundLocalizedString() throws {
         // GIVEN
         setup(input: inputSource)
-        let parsed = try SyntaxParser.parse(fileUrl)
-        let converter = SourceLocationConverter(file: fileUrl.path, tree: parsed)
+        let parsed = Parser.parse(source: try String(contentsOf: fileUrl))
+        let converter = SourceLocationConverter(fileName: fileUrl.path, tree: parsed)
         let checker = LocalizeParser(converter: converter)
         
         // WHEN
@@ -50,8 +51,8 @@ extension LocalizeParserTests {
     func testUsualStringLiteralNotTreatedAsLocalizedString() throws {
         // GIVEN
         setup(input: inputSource1)
-        let parsed = try SyntaxParser.parse(fileUrl)
-        let converter = SourceLocationConverter(file: fileUrl.path, tree: parsed)
+        let parsed = Parser.parse(source: try String(contentsOf: fileUrl))
+        let converter = SourceLocationConverter(fileName: fileUrl.path, tree: parsed)
         let checker = LocalizeParser(converter: converter)
         
         // WHEN
