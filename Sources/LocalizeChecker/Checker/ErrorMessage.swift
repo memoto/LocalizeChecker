@@ -4,16 +4,16 @@ import SwiftSyntax
 /// Contains all necessary meta data to locate and describe localization check error
 public struct ErrorMessage: Equatable, Codable {
     /// Key of the localized string in the dictionary
-    let key: String
+    public let key: String
     
     /// Name of the source file where the key is located
-    let file: String
+    public let file: String
     
     /// Line in the source file
-    let line: Int
+    public let line: Int
     
     /// Column in the source file
-    let column: Int
+    public let column: Int
 }
 
 extension ErrorMessage {
