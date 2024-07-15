@@ -17,7 +17,7 @@ let package = Package(
         ),
         .package(
             url: "https://github.com/apple/swift-argument-parser",
-            from: "1.1.3"
+            from: "1.2.1"
         )
     ],
     targets: [
