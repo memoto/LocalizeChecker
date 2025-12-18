@@ -5,6 +5,8 @@ import SwiftParser
 final class SourceFileChecker {
     
     var errors: [ErrorMessage] = []
+    var usedKeys: [LocalizeEntry] = []
+    var unusedKeys: [String] = []
     
     private let fileUrl: URL
     private let bundle: LocalizeBundle
@@ -22,7 +24,7 @@ final class SourceFileChecker {
     func start() throws {
         guard try fastCheck() else { return }
         
-        let syntaxTree = Parser.parse(source: try String(contentsOf: fileUrl))
+        let syntaxTree = Parser.parse(source: try String(contentsOf: fileUrl, encoding: .utf8))
         let converter = SourceLocationConverter(fileName: fileUrl.path, tree: syntaxTree)
         let parser = LocalizeParser(converter: converter)
         
@@ -30,6 +32,10 @@ final class SourceFileChecker {
         errors = parser.foundKeys
             .filter(notExistsInBundle)
             .compactMap(\.errorMessage)
+        usedKeys = parser.foundKeys
+        unusedKeys = bundle.keys.filter { key in
+            !parser.foundKeys.contains(where: { $0.key == key })
+        }
     }
     
 }
@@ -37,7 +43,7 @@ final class SourceFileChecker {
 private extension SourceFileChecker {
     
     func fastCheck() throws -> Bool {
-        try String(contentsOf: fileUrl).contains(".\(literalMarker)")
+        try String(contentsOf: fileUrl, encoding: .utf8).contains(".\(literalMarker)")
     }
     
 }

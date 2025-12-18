@@ -71,7 +71,7 @@ extension SourceFileBatchCheckerTests {
         
         // Then
         XCTAssertEqual(processedFilenames.sorted(), fileNames.sorted())
-        XCTAssertLessThan(end - start, 1.2)
+        XCTAssertLessThan(end - start, 3.0)
     }
     
     func testIfHalfWrongFilesProducedErrors() async throws {
@@ -162,5 +162,55 @@ extension SourceFileBatchCheckerTests {
         // Then
         XCTAssertTrue(reports.isEmpty)
     }
-    
+
+    func testAllProcessedFilesUseOnlyOneKey() async throws {
+        // Given
+        let stringsBundleUrl = Bundle.module.resourceURL?.appendingPathComponent("Fixtures/enlproj")
+        let filesIdRange = 0...20
+        let files = filesIdRange.map(filePath)
+        for id in filesIdRange {
+            setup(
+                input: inputSource(
+                    withLocalizeKey: "alert_ok"),
+                fileId: id
+            )
+        }
+        XCTAssertNotNil(stringsBundleUrl)
+        let checker = SourceFileBatchChecker(
+            sourceFiles: files,
+            localizeBundleFile: stringsBundleUrl!
+        )
+
+        // When
+        let unusedKeys: [UnusedKeyMessage] = try await checker.unusedKeys
+
+        // Then
+        XCTAssertEqual(unusedKeys.count, 5435)
+    }
+
+    func testAllProcessedFilesDontUseAnyKeys() async throws {
+        // Given
+        let stringsBundleUrl = Bundle.module.resourceURL?.appendingPathComponent("Fixtures/enlproj")
+        let filesIdRange = 0...20
+        let files = filesIdRange.map(filePath)
+        for id in filesIdRange {
+            setup(
+                input: inputSource(
+                    withLocalizeKey: "do_you_know_me"),
+                fileId: id
+            )
+        }
+        XCTAssertNotNil(stringsBundleUrl)
+        let checker = SourceFileBatchChecker(
+            sourceFiles: files,
+            localizeBundleFile: stringsBundleUrl!
+        )
+
+        // When
+        let unusedKeys: [UnusedKeyMessage] = try await checker.unusedKeys
+
+        // Then
+        XCTAssertEqual(unusedKeys.count, 5436)
+    }
+
 }

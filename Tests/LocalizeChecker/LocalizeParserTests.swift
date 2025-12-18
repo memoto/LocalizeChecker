@@ -36,7 +36,7 @@ extension LocalizeParserTests {
     func testFoundLocalizedString() throws {
         // GIVEN
         setup(input: inputSource)
-        let parsed = Parser.parse(source: try String(contentsOf: fileUrl))
+        let parsed = Parser.parse(source: try String(contentsOf: fileUrl, encoding: .utf8))
         let converter = SourceLocationConverter(fileName: fileUrl.path, tree: parsed)
         let checker = LocalizeParser(converter: converter)
         
@@ -50,7 +50,7 @@ extension LocalizeParserTests {
     func testUsualStringLiteralNotTreatedAsLocalizedString() throws {
         // GIVEN
         setup(input: inputSource1)
-        let parsed = Parser.parse(source: try String(contentsOf: fileUrl))
+        let parsed = Parser.parse(source: try String(contentsOf: fileUrl, encoding: .utf8))
         let converter = SourceLocationConverter(fileName: fileUrl.path, tree: parsed)
         let checker = LocalizeParser(converter: converter)
         

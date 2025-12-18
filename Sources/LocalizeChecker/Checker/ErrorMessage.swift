@@ -2,7 +2,7 @@ import Foundation
 import SwiftSyntax
 
 /// Contains all necessary meta data to locate and describe localization check error
-public struct ErrorMessage: Equatable, Codable {
+public struct ErrorMessage: Equatable, Codable, Sendable {
     /// Key of the localized string in the dictionary
     public let key: String
     
