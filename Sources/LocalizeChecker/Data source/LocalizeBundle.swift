@@ -1,4 +1,5 @@
 import Foundation
+import Synchronization
 
 enum Localizable: String {
     case strings = "Localizable.strings"
@@ -7,17 +8,17 @@ enum Localizable: String {
 
 /// Represents a merged bundle structure for **Localizable.strings** and **Localizable.stringsdict**
 /// Each key can be obtained by subscript
-public final class LocalizeBundle {
-    
+public final class LocalizeBundle: Sendable {
+
     typealias LocalizeHash = [String : Any]
     
-    private let dictionary: LocalizeHash
-    
+    private nonisolated(unsafe) let dictionary: LocalizeHash
+
     /// Create bundle from file
     /// - Parameter fileUrl: URL of the strings file
     public init(fileUrl: URL) {
         dictionary = Self.parseStrings(fileUrl: fileUrl)
-        
+
         print("LocalizeBundle(fileUrl:): dict.count = \(dictionary.keys.count)")
     }
     
@@ -28,7 +29,7 @@ public final class LocalizeBundle {
         let fileManager = FileManager()
         let items = try fileManager.contentsOfDirectory(atPath: directoryPath)
 
-        dictionary = try items.reduce(into: [:]) { accDict, item in
+        let dict: LocalizeHash = try items.reduce(into: [:]) { accDict, item in
             let fileUrl = directoryUrl.appendingPathComponent(item)
             switch Localizable(rawValue: item) {
             case .strings:
@@ -44,7 +45,8 @@ public final class LocalizeBundle {
                 break
             }
         }
-        
+        dictionary = dict
+
         print("LocalizeBundle(directoryPath:): dict.count = \(dictionary.keys.count)")
     }
     
@@ -63,7 +65,7 @@ public final class LocalizeBundle {
 private extension LocalizeBundle {
     
     static func parseStrings(fileUrl: URL) -> [String: String] {
-        let rawContent = try? String(contentsOf: fileUrl)
+        let rawContent = try? String(contentsOf: fileUrl, encoding: .utf8)
         return rawContent.map(Self.parseStrings) ?? [:]
     }
     
@@ -98,7 +100,7 @@ private extension LocalizeBundle {
 
 extension LocalizeBundle: ExpressibleByStringLiteral {
     
-    convenience public init(stringLiteral string: String) {
+    public convenience init(stringLiteral string: String) {
         self.init(fileUrl: URL(fileURLWithPath: string))
     }
     

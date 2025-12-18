@@ -24,7 +24,7 @@ final class SourceFileChecker {
     func start() throws {
         guard try fastCheck() else { return }
         
-        let syntaxTree = Parser.parse(source: try String(contentsOf: fileUrl))
+        let syntaxTree = Parser.parse(source: try String(contentsOf: fileUrl, encoding: .utf8))
         let converter = SourceLocationConverter(fileName: fileUrl.path, tree: syntaxTree)
         let parser = LocalizeParser(converter: converter)
         
@@ -43,7 +43,7 @@ final class SourceFileChecker {
 private extension SourceFileChecker {
     
     func fastCheck() throws -> Bool {
-        try String(contentsOf: fileUrl).contains(".\(literalMarker)")
+        try String(contentsOf: fileUrl, encoding: .utf8).contains(".\(literalMarker)")
     }
     
 }

@@ -1,5 +1,5 @@
 import Foundation
-import ArgumentParser
+@preconcurrency import ArgumentParser
 import LocalizeChecker
 
 @main
@@ -16,7 +16,7 @@ struct LocalizeCheckerCLI: AsyncParsableCommandProtocol, SourceFilesTraversalTra
     @Option(help: "Level of panic on invalid keys usage: (error | warning). `error` is default")
     var strictlicity: ReportStrictlicity?
     
-    static var configuration = CommandConfiguration(
+    static let configuration = CommandConfiguration(
         commandName: "check-localize",
         abstract: "Scans for misused localization keys in your project sources",
         version: "0.1.2"
@@ -29,13 +29,13 @@ struct LocalizeCheckerCLI: AsyncParsableCommandProtocol, SourceFilesTraversalTra
             sourceFiles: try files,
             localizeBundleFile: localizeBundleFile
         )
-        let reportPrinter = ReportPrinter(
+        let reportPrinter = await ReportPrinter(
             formatter: XcodeReportFormatter(strictlicity: strictlicity ?? .error)
         )
         
         let start = ProcessInfo.processInfo.systemUptime
         
-        for try await report in try checker.reports {
+        for try await report in try await checker.reports {
             await reportPrinter.print(report)
         }
         

@@ -1,7 +1,7 @@
 import Foundation
 
 /// Performs multiple checks at once considering certain optimizations depending on the amount of them
-public final class SourceFileBatchChecker {
+public actor SourceFileBatchChecker {
     
     public typealias ReportStream = AsyncThrowingStream<ErrorMessage, Error>
     public typealias UnusedKeysStream = AsyncThrowingStream<UnusedKeyMessage, Error>
@@ -63,12 +63,13 @@ public final class SourceFileBatchChecker {
     @discardableResult
     func run() throws -> ReportStream {
         let localizeBundle = try LocalizeBundle(directoryPath: localizeBundleUrl.path)
+        let chunks = chunks
         return ReportStream { continuation in
             Task {
                 await withThrowingTaskGroup(of: ReportMessages.self) { group in
                     for filesChunk in chunks {
                         group.addTask {
-                            try self.processBatch(
+                            try await self.processBatch(
                                 ofSourceFiles: Array(filesChunk),
                                 in: localizeBundle
                             )
@@ -98,7 +99,7 @@ public final class SourceFileBatchChecker {
             try await withThrowingTaskGroup(of: ReportMessages.self) { group in
                 for filesChunk in chunks {
                     group.addTask {
-                        try self.processBatch(
+                        try await self.processBatch(
                             ofSourceFiles: Array(filesChunk),
                             in: localizeBundle
                         )

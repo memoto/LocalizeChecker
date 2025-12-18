@@ -1,5 +1,6 @@
 import Foundation
 
+@MainActor
 /// Prints checker reports in the given format
 public final class ReportPrinter {
     

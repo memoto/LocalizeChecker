@@ -1,7 +1,7 @@
 import Foundation
-import SwiftSyntax
+@preconcurrency import SwiftSyntax
 
-struct LocalizeEntry: Hashable {
+struct LocalizeEntry: Hashable, Sendable {
     let key: String
     let sourceLocation: SourceLocation
 }

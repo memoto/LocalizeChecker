@@ -1,6 +1,6 @@
 /// Level of stritclicity used to output reports
 /// **Available options**: error, warning
-public enum ReportStrictlicity: String {
+public enum ReportStrictlicity: String, Sendable {
     case error
     case warning
 }

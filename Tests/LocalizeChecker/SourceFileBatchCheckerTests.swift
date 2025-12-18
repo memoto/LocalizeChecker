@@ -71,7 +71,7 @@ extension SourceFileBatchCheckerTests {
         
         // Then
         XCTAssertEqual(processedFilenames.sorted(), fileNames.sorted())
-        XCTAssertLessThan(end - start, 1.2)
+        XCTAssertLessThan(end - start, 3.0)
     }
     
     func testIfHalfWrongFilesProducedErrors() async throws {

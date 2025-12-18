@@ -1,11 +1,11 @@
-// swift-tools-version: 5.9
+// swift-tools-version: 6.0
 
 import PackageDescription
 import Foundation
 
 let package = Package(
     name: "LocalizeChecker",
-    platforms: [.macOS(.v14)],
+    platforms: [.macOS(.v15)],
     products: [
         .executable(name: "check-localize", targets: ["LocalizeCheckerCLI"]),
         .library(name: "LocalizeChecker", targets: ["LocalizeChecker"])
@@ -49,5 +49,6 @@ let package = Package(
             path: "Tests/LocalizeChecker",
             resources: [.copy("Fixtures")]
         )
-    ]
+    ],
+    swiftLanguageModes: [.v5, .v6]
 )
