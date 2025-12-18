@@ -1,7 +1,7 @@
 import Foundation
 import SwiftSyntax
 
-struct LocalizeEntry {
+struct LocalizeEntry: Hashable {
     let key: String
     let sourceLocation: SourceLocation
 }

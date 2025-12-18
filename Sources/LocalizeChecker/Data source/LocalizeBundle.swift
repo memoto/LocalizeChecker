@@ -51,7 +51,11 @@ public final class LocalizeBundle {
     public subscript(key: String) -> Any? {
         dictionary[key]
     }
-    
+
+    public var keys: [String] {
+        Array(dictionary.keys)
+    }
+
 }
 
 // MARK:- Parsing

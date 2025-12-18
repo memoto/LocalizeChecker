@@ -5,6 +5,8 @@ import SwiftParser
 final class SourceFileChecker {
     
     var errors: [ErrorMessage] = []
+    var usedKeys: [LocalizeEntry] = []
+    var unusedKeys: [String] = []
     
     private let fileUrl: URL
     private let bundle: LocalizeBundle
@@ -30,6 +32,10 @@ final class SourceFileChecker {
         errors = parser.foundKeys
             .filter(notExistsInBundle)
             .compactMap(\.errorMessage)
+        usedKeys = parser.foundKeys
+        unusedKeys = bundle.keys.filter { key in
+            !parser.foundKeys.contains(where: { $0.key == key })
+        }
     }
     
 }

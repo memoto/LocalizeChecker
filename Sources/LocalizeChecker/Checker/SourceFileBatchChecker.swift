@@ -4,7 +4,9 @@ import Foundation
 public final class SourceFileBatchChecker {
     
     public typealias ReportStream = AsyncThrowingStream<ErrorMessage, Error>
-    
+    public typealias UnusedKeysStream = AsyncThrowingStream<UnusedKeyMessage, Error>
+    typealias ReportMessages = (errors: [ErrorMessage], unused: [UnusedKeyMessage], used: [LocalizeEntry])
+
     @available(macOS 12, *)
     /// Async stream of obtained check reports
     public var reports: ReportStream {
@@ -12,10 +14,11 @@ public final class SourceFileBatchChecker {
             try run()
         }
     }
-    
-    @available(macOS, deprecated: 12, obsoleted: 13, message: "Use much faster reports stream")
-    public func getReports() throws -> [ErrorMessage] {
-        try syncRun()
+
+    public var unusedKeys: [UnusedKeyMessage] {
+        get async throws {
+            try await runForUnusedKeys()
+        }
     }
     
     @available(macOS 12, *)
@@ -62,7 +65,7 @@ public final class SourceFileBatchChecker {
         let localizeBundle = try LocalizeBundle(directoryPath: localizeBundleUrl.path)
         return ReportStream { continuation in
             Task {
-                await withThrowingTaskGroup(of: [ErrorMessage].self) { group in
+                await withThrowingTaskGroup(of: ReportMessages.self) { group in
                     for filesChunk in chunks {
                         group.addTask {
                             try self.processBatch(
@@ -73,7 +76,7 @@ public final class SourceFileBatchChecker {
                     }
                     
                     do {
-                        for try await reportsChunk in group {
+                        for try await (reportsChunk, _, _) in group {
                             reportsChunk.forEach {
                                 continuation.yield($0)
                             }
@@ -86,9 +89,40 @@ public final class SourceFileBatchChecker {
             }
         }
     }
-    
+
+    @available(macOS 12, *)
     @discardableResult
-    func syncRun() throws -> [ErrorMessage] {
+    func runForUnusedKeys() async throws -> [UnusedKeyMessage] {
+        let localizeBundle = try LocalizeBundle(directoryPath: localizeBundleUrl.path)
+        return try await Task {
+            try await withThrowingTaskGroup(of: ReportMessages.self) { group in
+                for filesChunk in chunks {
+                    group.addTask {
+                        try self.processBatch(
+                            ofSourceFiles: Array(filesChunk),
+                            in: localizeBundle
+                        )
+                    }
+                }
+
+                var usedKeys: Set<String> = []
+                var unusedKeys: Set<String> = []
+                for try await (_, unusedKeysChunk, usedKeysChunk) in group {
+                    unusedKeysChunk.forEach {
+                        unusedKeys.insert($0.key)
+                    }
+                    usedKeysChunk.forEach {
+                        usedKeys.insert($0.key)
+                    }
+                }
+                let trulyUnusedKeys = unusedKeys.subtracting(usedKeys)
+                return Array(trulyUnusedKeys.map(UnusedKeyMessage.init(key:)))
+            }
+        }.value
+    }
+
+    @discardableResult
+    func syncRun() throws -> ReportMessages {
         let localizeBundle = LocalizeBundle(fileUrl: localizeBundleUrl)
         let reports = try self.processBatch(
             ofSourceFiles: sourceFiles,
@@ -98,7 +132,7 @@ public final class SourceFileBatchChecker {
         return reports
     }
     
-    private func processBatch(ofSourceFiles files: [String], in localizeBundle: LocalizeBundle) throws -> [ErrorMessage] {
+    private func processBatch(ofSourceFiles files: [String], in localizeBundle: LocalizeBundle) throws -> ReportMessages {
         let fileUrls = files.compactMap(URL.init(fileURLWithPath:))
         let sourceCheckers = try fileUrls.map {
             try SourceFileChecker(fileUrl: $0, localizeBundle: localizeBundle)
@@ -107,7 +141,11 @@ public final class SourceFileBatchChecker {
             try sourceChecker.start()
         }
         
-        return sourceCheckers.flatMap(\.errors)
+        return (
+            sourceCheckers.flatMap(\.errors), 
+            sourceCheckers.flatMap(\.unusedKeys).map(UnusedKeyMessage.init(key:)),
+            sourceCheckers.flatMap(\.usedKeys)
+        )
     }
     
 }
