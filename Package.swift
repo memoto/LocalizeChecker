@@ -28,6 +28,9 @@ let package = Package(
                 .product(name: "SwiftSyntax", package: "swift-syntax"),
                 .product(name: "SwiftParser", package: "swift-syntax"),
                 "LocalizeChecker",
+            ],
+            swiftSettings: [
+                .enableUpcomingFeature("AccessLevelOnImport")
             ]
         ),
         .target(
