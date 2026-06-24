@@ -1,8 +1,8 @@
 import Foundation
 
 /// Performs multiple checks at once considering certain optimizations depending on the amount of them
-public actor SourceFileBatchChecker {
-    
+public final class SourceFileBatchChecker: Sendable {
+
     public typealias ReportStream = AsyncThrowingStream<ErrorMessage, Error>
     public typealias UnusedKeysStream = AsyncThrowingStream<UnusedKeyMessage, Error>
     typealias ReportMessages = (errors: [ErrorMessage], unused: [UnusedKeyMessage], used: [LocalizeEntry])
@@ -20,7 +20,7 @@ public actor SourceFileBatchChecker {
             try await runForUnusedKeys()
         }
     }
-    
+
     @available(macOS 12, *)
     var processedFiles: AsyncMapSequence<ReportStream, String> {
         get throws {
@@ -28,9 +28,9 @@ public actor SourceFileBatchChecker {
         }
     }
 
-    private var sourceFiles: [String]
-    private var localizeBundleUrl: URL
-    
+    private let sourceFiles: [String]
+    private let localizeBundleUrl: URL
+
     /// Creates batch source file checker
     /// - Parameters:
     ///   - sourceFiles: List of source files to check for localization mistakes
@@ -42,45 +42,32 @@ public actor SourceFileBatchChecker {
         self.sourceFiles = sourceFiles
         self.localizeBundleUrl = localizeBundleFile
     }
-    
-    private var chunks: [ArraySlice<String>] {
-        let chunkIndices = stride(from: sourceFiles.startIndex, to: sourceFiles.endIndex, by: chunkSize)
-        
-        return chunkIndices.map{
-            sourceFiles[$0..<min($0+chunkSize, sourceFiles.endIndex)]
-        }
-    }
-    
-    private var chunkSize: Int {
-        let jobsCount = ProcessInfo().activeProcessorCount
-        let estimatedChunkSize = sourceFiles.count/jobsCount
-        return estimatedChunkSize > 0
-            ? estimatedChunkSize
-            : sourceFiles.count
-    }
-    
+
     @available(macOS 12, *)
     @discardableResult
     func run() throws -> ReportStream {
         let localizeBundle = try LocalizeBundle(directoryPath: localizeBundleUrl.path)
-        let chunks = chunks
+        let files = sourceFiles
         return ReportStream { continuation in
             Task {
-                await withThrowingTaskGroup(of: ReportMessages.self) { group in
-                    for filesChunk in chunks {
+                await withThrowingTaskGroup(of: [ErrorMessage].self) { group in
+                    // Per-file tasks. Previously the batch was split into
+                    // `activeProcessorCount` chunks processed sequentially
+                    // inside each chunk, and — when this type was an actor —
+                    // all chunk tasks hopped back onto the actor's serial
+                    // executor, eliminating parallelism entirely. Spawning
+                    // one task per file lets Swift Concurrency's cooperative
+                    // pool load-balance CPU-bound SwiftParser work across
+                    // cores.
+                    for file in files {
                         group.addTask {
-                            try await self.processBatch(
-                                ofSourceFiles: Array(filesChunk),
-                                in: localizeBundle
-                            )
+                            try Self.checkSingle(file: file, in: localizeBundle).errors
                         }
                     }
-                    
+
                     do {
-                        for try await (reportsChunk, _, _) in group {
-                            reportsChunk.forEach {
-                                continuation.yield($0)
-                            }
+                        for try await errors in group {
+                            errors.forEach { continuation.yield($0) }
                         }
                         continuation.finish(throwing: nil)
                     } catch {
@@ -95,58 +82,58 @@ public actor SourceFileBatchChecker {
     @discardableResult
     func runForUnusedKeys() async throws -> [UnusedKeyMessage] {
         let localizeBundle = try LocalizeBundle(directoryPath: localizeBundleUrl.path)
-        return try await Task {
-            try await withThrowingTaskGroup(of: ReportMessages.self) { group in
-                for filesChunk in chunks {
-                    group.addTask {
-                        try await self.processBatch(
-                            ofSourceFiles: Array(filesChunk),
-                            in: localizeBundle
-                        )
-                    }
+        let files = sourceFiles
+        return try await withThrowingTaskGroup(of: (unused: [UnusedKeyMessage], used: [LocalizeEntry]).self) { group in
+            for file in files {
+                group.addTask {
+                    let messages = try Self.checkSingle(file: file, in: localizeBundle)
+                    return (messages.unused, messages.used)
                 }
-
-                var usedKeys: Set<String> = []
-                var unusedKeys: Set<String> = []
-                for try await (_, unusedKeysChunk, usedKeysChunk) in group {
-                    unusedKeysChunk.forEach {
-                        unusedKeys.insert($0.key)
-                    }
-                    usedKeysChunk.forEach {
-                        usedKeys.insert($0.key)
-                    }
-                }
-                let trulyUnusedKeys = unusedKeys.subtracting(usedKeys)
-                return Array(trulyUnusedKeys.map(UnusedKeyMessage.init(key:)))
             }
-        }.value
+
+            var usedKeys: Set<String> = []
+            var unusedKeys: Set<String> = []
+            for try await chunk in group {
+                chunk.unused.forEach { unusedKeys.insert($0.key) }
+                chunk.used.forEach { usedKeys.insert($0.key) }
+            }
+            let trulyUnusedKeys = unusedKeys.subtracting(usedKeys)
+            return trulyUnusedKeys.map(UnusedKeyMessage.init(key:))
+        }
     }
 
     @discardableResult
     func syncRun() throws -> ReportMessages {
         let localizeBundle = LocalizeBundle(fileUrl: localizeBundleUrl)
-        let reports = try self.processBatch(
-            ofSourceFiles: sourceFiles,
-            in: localizeBundle
-        )
-        
-        return reports
+        return try processBatch(ofSourceFiles: sourceFiles, in: localizeBundle)
     }
-    
+
     private func processBatch(ofSourceFiles files: [String], in localizeBundle: LocalizeBundle) throws -> ReportMessages {
-        let fileUrls = files.compactMap(URL.init(fileURLWithPath:))
-        let sourceCheckers = try fileUrls.map {
+        let sourceCheckers = try files.compactMap(URL.init(fileURLWithPath:)).map {
             try SourceFileChecker(fileUrl: $0, localizeBundle: localizeBundle)
         }
         for sourceChecker in sourceCheckers {
             try sourceChecker.start()
         }
-        
+
         return (
-            sourceCheckers.flatMap(\.errors), 
+            sourceCheckers.flatMap(\.errors),
             sourceCheckers.flatMap(\.unusedKeys).map(UnusedKeyMessage.init(key:)),
             sourceCheckers.flatMap(\.usedKeys)
         )
     }
-    
+
+    private static func checkSingle(file: String, in bundle: LocalizeBundle) throws -> ReportMessages {
+        let checker = try SourceFileChecker(
+            fileUrl: URL(fileURLWithPath: file),
+            localizeBundle: bundle
+        )
+        try checker.start()
+        return (
+            checker.errors,
+            checker.unusedKeys.map(UnusedKeyMessage.init(key:)),
+            checker.usedKeys
+        )
+    }
+
 }

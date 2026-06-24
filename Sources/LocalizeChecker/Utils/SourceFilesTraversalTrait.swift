@@ -6,17 +6,11 @@ public protocol SourceFilesTraversalTrait {
 }
 
 public extension SourceFilesTraversalTrait {
-    
+
     var files: [String] {
         get throws {
             try sourcesDirectory.map(parseSourceDirectory)
             ?? self.sourceFiles
-        }
-    }
-    
-    private var sourcesDirectoryUrl: URL? {
-        sourcesDirectory.map {
-            URL(fileURLWithPath: $0, isDirectory: true)
         }
     }
 
@@ -29,19 +23,20 @@ public extension SourceFilesTraversalTrait {
         ) else {
             throw SourceFileTraversalError.sourcesFileEnumerationFailed
         }
-        
-        return try sourcesEnumerator
-            .compactMap { $0 as? URL }
-            .filter { $0.pathExtension == "swift" }
-            .filter {
-                let attributes = try $0.resourceValues(
-                    forKeys: [.isRegularFileKey]
-                )
-                return attributes.isRegularFile ?? false
-            }
-            .map(\.path)
+
+        var paths: [String] = []
+        for case let url as URL in sourcesEnumerator {
+            guard url.pathExtension == "swift" else { continue }
+            // The enumerator was created with `.isRegularFileKey` prefetched,
+            // so reading the resource value here hits the cached value and
+            // avoids an extra `stat` syscall per file.
+            let attributes = try url.resourceValues(forKeys: [.isRegularFileKey])
+            guard attributes.isRegularFile == true else { continue }
+            paths.append(url.path)
+        }
+        return paths
     }
-    
+
 }
 
 public enum SourceFileTraversalError: Swift.Error {

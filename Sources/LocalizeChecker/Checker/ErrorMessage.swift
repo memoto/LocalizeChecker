@@ -5,46 +5,46 @@ import SwiftSyntax
 public struct ErrorMessage: Equatable, Codable, Sendable {
     /// Key of the localized string in the dictionary
     public let key: String
-    
+
     /// Name of the source file where the key is located
     public let file: String
-    
+
     /// Line in the source file
     public let line: Int
-    
+
     /// Column in the source file
     public let column: Int
 }
 
 extension ErrorMessage {
-    
+
     var baseFilename: String {
         URL(fileURLWithPath: file).lastPathComponent
     }
-    
+
     var description: String {
         """
         💂‍♀️ Localization [\(key)] is missing in the original bundle
         """
     }
-    
+
 }
 
 extension ErrorMessage {
-    
+
     init(entry: LocalizeEntry) {
         self.key = entry.key
         self.file = entry.sourceLocation.file
         self.line = entry.sourceLocation.line
         self.column = entry.sourceLocation.column
     }
-    
+
 }
 
 extension LocalizeEntry {
-    
+
     var errorMessage: ErrorMessage? {
         ErrorMessage(entry: self)
     }
-    
+
 }
