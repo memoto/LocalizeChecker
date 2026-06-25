@@ -3,7 +3,7 @@ import Foundation
 @testable import LocalizeChecker
 
 final class SourceFileBatchCheckerTests: XCTestCase {
-    
+
     func inputSource(withLocalizeKey key: String) -> String {
         """
         func setupButton() {
@@ -11,19 +11,19 @@ final class SourceFileBatchCheckerTests: XCTestCase {
         }
         """
     }
-    
+
     func fileName(_ id: Int) -> String {
         "localize_check_test_\(id).swift"
     }
-    
+
     func filePath(_ id: Int) -> String {
         ".fixtures/\(fileName(id))"
     }
-    
+
     func fileUrl(_ id: Int) -> URL {
         URL(fileURLWithPath: filePath(id))
     }
-    
+
     private func setup(input: String, fileId: Int) {
         XCTAssertNoThrow(
             try FileManager().createDirectory(atPath: ".fixtures", withIntermediateDirectories: true)
@@ -32,17 +32,17 @@ final class SourceFileBatchCheckerTests: XCTestCase {
             try input.write(toFile: filePath(fileId), atomically: true, encoding: .utf8)
         )
     }
-    
+
     override class func tearDown() {
         XCTAssertNoThrow(
             try FileManager().removeItem(atPath: ".fixtures")
         )
     }
-    
+
 }
 
 extension SourceFileBatchCheckerTests {
-    
+
     func testAllFilesProcessed() async throws {
         // Given
         let stringsBundleUrl = Bundle.module.resourceURL?.appendingPathComponent("Fixtures/enlproj")
@@ -51,8 +51,7 @@ extension SourceFileBatchCheckerTests {
         let files = filesIdRange.map(filePath)
         for id in filesIdRange {
             setup(
-                input: inputSource(
-                    withLocalizeKey: "do_you_know_me"),
+                input: inputSource(withLocalizeKey: "do_you_know_me"),
                 fileId: id
             )
         }
@@ -60,20 +59,18 @@ extension SourceFileBatchCheckerTests {
             sourceFiles: files,
             localizeBundleFile: stringsBundleUrl!
         )
-        
+
         // When
         let start = ProcessInfo.processInfo.systemUptime
-        let processedFilenames: [String] = try await checker.processedFiles.reduce([]) {
-            $0 + [$1]
-        }
-        
-        let end = ProcessInfo.processInfo.systemUptime
-        
+        let processedFilenames: [String] = try await checker.processedFiles.reduce([]) { $0 + [$1] }
+        let elapsed = ProcessInfo.processInfo.systemUptime - start
+        print("⏱ testAllFilesProcessed (\(filesIdRange.count) files): \(String(format: "%.3f", elapsed))s")
+
         // Then
         XCTAssertEqual(processedFilenames.sorted(), fileNames.sorted())
-        XCTAssertLessThan(end - start, 3.0)
+        XCTAssertLessThan(elapsed, 3.0)
     }
-    
+
     func testIfHalfWrongFilesProducedErrors() async throws {
         // Given
         let stringsBundleUrl = Bundle.module.resourceURL?.appendingPathComponent("Fixtures/enlproj")
@@ -83,33 +80,31 @@ extension SourceFileBatchCheckerTests {
         let wrongFiles = wrongFilesIdRange.map(fileName)
         for id in wrongFilesIdRange {
             setup(
-                input: inputSource(
-                    withLocalizeKey: "do_you_know_me"),
+                input: inputSource(withLocalizeKey: "do_you_know_me"),
                 fileId: id
             )
         }
         for id in rightFilesIdRange {
             setup(
-                input: inputSource(
-                    withLocalizeKey: "category_name_cash"),
+                input: inputSource(withLocalizeKey: "category_name_cash"),
                 fileId: id
             )
         }
-        
         let checker = SourceFileBatchChecker(
             sourceFiles: wrongFilesIdRange.map(filePath),
             localizeBundleFile: stringsBundleUrl!
         )
-        
+
         // When
-        let processedFiles: [String] = try await checker.processedFiles.reduce([]) {
-            $0 + [$1]
-        }
-        
+        let start = ProcessInfo.processInfo.systemUptime
+        let processedFiles: [String] = try await checker.processedFiles.reduce([]) { $0 + [$1] }
+        let elapsed = ProcessInfo.processInfo.systemUptime - start
+        print("⏱ testIfHalfWrongFilesProducedErrors (\(wrongFilesIdRange.count) files): \(String(format: "%.3f", elapsed))s")
+
         // Then
         XCTAssertEqual(processedFiles.sorted(), wrongFiles.sorted())
     }
-    
+
     func testAllProcessedFilesContainsCorrespondingErrors() async throws {
         // Given
         let stringsBundleUrl = Bundle.module.resourceURL?.appendingPathComponent("Fixtures/enlproj")
@@ -117,8 +112,7 @@ extension SourceFileBatchCheckerTests {
         let files = filesIdRange.map(filePath)
         for id in filesIdRange {
             setup(
-                input: inputSource(
-                    withLocalizeKey: "do_you_know_me"),
+                input: inputSource(withLocalizeKey: "do_you_know_me"),
                 fileId: id
             )
         }
@@ -127,16 +121,17 @@ extension SourceFileBatchCheckerTests {
             sourceFiles: files,
             localizeBundleFile: stringsBundleUrl!
         )
-        
+
         // When
-        let reports: [ErrorMessage] = try await checker.reports.reduce([]) {
-            $0 + [$1]
-        }
-        
+        let start = ProcessInfo.processInfo.systemUptime
+        let reports: [ErrorMessage] = try await checker.reports.reduce([]) { $0 + [$1] }
+        let elapsed = ProcessInfo.processInfo.systemUptime - start
+        print("⏱ testAllProcessedFilesContainsCorrespondingErrors (\(filesIdRange.count) files): \(String(format: "%.3f", elapsed))s")
+
         // Then
         XCTAssertTrue(reports.allSatisfy { $0.key == "do_you_know_me" })
     }
-    
+
     func testAllProcessedFilesDoesNotContainAnyErrors() async throws {
         // Given
         let stringsBundleUrl = Bundle.module.resourceURL?.appendingPathComponent("Fixtures/enlproj")
@@ -144,8 +139,7 @@ extension SourceFileBatchCheckerTests {
         let files = filesIdRange.map(filePath)
         for id in filesIdRange {
             setup(
-                input: inputSource(
-                    withLocalizeKey: "category_name_cash"),
+                input: inputSource(withLocalizeKey: "category_name_cash"),
                 fileId: id
             )
         }
@@ -153,12 +147,13 @@ extension SourceFileBatchCheckerTests {
             sourceFiles: files,
             localizeBundleFile: stringsBundleUrl!
         )
-        
+
         // When
-        let reports: [ErrorMessage] = try await checker.reports.reduce([]) {
-            $0 + [$1]
-        }
-        
+        let start = ProcessInfo.processInfo.systemUptime
+        let reports: [ErrorMessage] = try await checker.reports.reduce([]) { $0 + [$1] }
+        let elapsed = ProcessInfo.processInfo.systemUptime - start
+        print("⏱ testAllProcessedFilesDoesNotContainAnyErrors (\(filesIdRange.count) files): \(String(format: "%.3f", elapsed))s")
+
         // Then
         XCTAssertTrue(reports.isEmpty)
     }
@@ -170,8 +165,7 @@ extension SourceFileBatchCheckerTests {
         let files = filesIdRange.map(filePath)
         for id in filesIdRange {
             setup(
-                input: inputSource(
-                    withLocalizeKey: "alert_ok"),
+                input: inputSource(withLocalizeKey: "alert_ok"),
                 fileId: id
             )
         }
@@ -182,7 +176,10 @@ extension SourceFileBatchCheckerTests {
         )
 
         // When
+        let start = ProcessInfo.processInfo.systemUptime
         let unusedKeys: [UnusedKeyMessage] = try await checker.unusedKeys
+        let elapsed = ProcessInfo.processInfo.systemUptime - start
+        print("⏱ testAllProcessedFilesUseOnlyOneKey (\(filesIdRange.count) files): \(String(format: "%.3f", elapsed))s")
 
         // Then
         XCTAssertEqual(unusedKeys.count, 5435)
@@ -195,8 +192,7 @@ extension SourceFileBatchCheckerTests {
         let files = filesIdRange.map(filePath)
         for id in filesIdRange {
             setup(
-                input: inputSource(
-                    withLocalizeKey: "do_you_know_me"),
+                input: inputSource(withLocalizeKey: "do_you_know_me"),
                 fileId: id
             )
         }
@@ -207,7 +203,10 @@ extension SourceFileBatchCheckerTests {
         )
 
         // When
+        let start = ProcessInfo.processInfo.systemUptime
         let unusedKeys: [UnusedKeyMessage] = try await checker.unusedKeys
+        let elapsed = ProcessInfo.processInfo.systemUptime - start
+        print("⏱ testAllProcessedFilesDontUseAnyKeys (\(filesIdRange.count) files): \(String(format: "%.3f", elapsed))s")
 
         // Then
         XCTAssertEqual(unusedKeys.count, 5436)

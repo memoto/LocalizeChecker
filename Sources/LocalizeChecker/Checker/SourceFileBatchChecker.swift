@@ -43,34 +43,18 @@ public actor SourceFileBatchChecker {
         self.localizeBundleUrl = localizeBundleFile
     }
     
-    private var chunks: [ArraySlice<String>] {
-        let chunkIndices = stride(from: sourceFiles.startIndex, to: sourceFiles.endIndex, by: chunkSize)
-        
-        return chunkIndices.map{
-            sourceFiles[$0..<min($0+chunkSize, sourceFiles.endIndex)]
-        }
-    }
-    
-    private var chunkSize: Int {
-        let jobsCount = ProcessInfo().activeProcessorCount
-        let estimatedChunkSize = sourceFiles.count/jobsCount
-        return estimatedChunkSize > 0
-            ? estimatedChunkSize
-            : sourceFiles.count
-    }
-    
     @available(macOS 12, *)
     @discardableResult
     func run() throws -> ReportStream {
         let localizeBundle = try LocalizeBundle(directoryPath: localizeBundleUrl.path)
-        let chunks = chunks
+        let sourceFiles = sourceFiles
         return ReportStream { continuation in
             Task {
                 await withThrowingTaskGroup(of: ReportMessages.self) { group in
-                    for filesChunk in chunks {
+                    for file in sourceFiles {
                         group.addTask {
-                            try await self.processBatch(
-                                ofSourceFiles: Array(filesChunk),
+                            try self.processBatch(
+                                ofSourceFiles: [file],
                                 in: localizeBundle
                             )
                         }
@@ -95,12 +79,13 @@ public actor SourceFileBatchChecker {
     @discardableResult
     func runForUnusedKeys() async throws -> [UnusedKeyMessage] {
         let localizeBundle = try LocalizeBundle(directoryPath: localizeBundleUrl.path)
+        let sourceFiles = sourceFiles
         return try await Task {
             try await withThrowingTaskGroup(of: ReportMessages.self) { group in
-                for filesChunk in chunks {
+                for file in sourceFiles {
                     group.addTask {
-                        try await self.processBatch(
-                            ofSourceFiles: Array(filesChunk),
+                        try self.processBatch(
+                            ofSourceFiles: [file],
                             in: localizeBundle
                         )
                     }
@@ -133,7 +118,7 @@ public actor SourceFileBatchChecker {
         return reports
     }
     
-    private func processBatch(ofSourceFiles files: [String], in localizeBundle: LocalizeBundle) throws -> ReportMessages {
+    private nonisolated func processBatch(ofSourceFiles files: [String], in localizeBundle: LocalizeBundle) throws -> ReportMessages {
         let fileUrls = files.compactMap(URL.init(fileURLWithPath:))
         let sourceCheckers = try fileUrls.map {
             try SourceFileChecker(fileUrl: $0, localizeBundle: localizeBundle)
